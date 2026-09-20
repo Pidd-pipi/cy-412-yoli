@@ -18,9 +18,10 @@ docker compose up -d
 
 ## 主要功能
 
-- **物业工作台**：汇总待办报修、本月已收费用和近期公告。
+- **物业工作台**：汇总待办报修、待审访客申请、本月已收费用和近期公告。
 - **报修管理**：业主创建水电/家具/公共设施等报修；物业筛选、分配和更新进度。
 - **费用缴纳**：按业主展示账单，通过支付宝沙箱模拟完成支付和记录查询。
+- **访客通行（闭环）**：登记车牌、到访时段、楼栋房号生成待审申请；物业批准时同一车牌在重叠时段只能存在一张有效通行证，冲突则整次拒绝并保持待审（失败原因回写页面，刷新后仍可读）；到访开始前可撤销，撤销或过期后释放时段；重复审批与并发审批只能成功一次。
 - **社区公告**：置顶、发布、详情查看与阅读计数。
 - **个人中心**：更新昵称、头像 URL，并绑定楼栋、单元和房间。
 - **安全与治理**：JWT 登录态、RBAC、操作日志、敏感接口内存限流、统一 JSON 响应。
@@ -75,7 +76,11 @@ cd backend && go build ./...
 | POST | `/payments/:id/pay` | 模拟支付（限流） |
 | GET/POST | `/announcements` | 公告列表 / 发布，发布需 `announcement:publish` |
 | GET | `/announcements/:id` | 公告详情并记录阅读 |
-| GET | `/dashboard/summary` | 工作台汇总 |
+| GET/POST | `/visitor-passes` | 访客通行证列表（业主仅本人，物业全部，可 `?status=` 过滤）/ 登记生成待审申请 |
+| POST | `/visitor-passes/:id/approve` | 物业批准，需 `visitor:approve`；重叠冲突整次拒绝并保持待审（HTTP 409 + 冲突原因）；重复/并发审批仅一次成功 |
+| POST | `/visitor-passes/:id/reject` | 物业拒绝待审申请并填写原因，需 `visitor:approve` |
+| POST | `/visitor-passes/:id/revoke` | 到访开始前撤销（业主本人或物业），撤销后释放时段 |
+| GET | `/dashboard/summary` | 工作台汇总（含待审访客申请数 `pending_visitor_passes`） |
 | GET | `/operation-logs` | 操作日志，`log:read` |
 
 OpenAPI 摘要位于 `backend/api/openapi.yaml`。
@@ -85,15 +90,15 @@ OpenAPI 摘要位于 `backend/api/openapi.yaml`。
 ```text
 .
 ├── frontend/
-│   ├── src/api/                # user、repair、payment、announcement 请求
-│   ├── src/stores/             # authStore、userStore、repairStore、paymentStore
+│   ├── src/api/                # user、repair、payment、announcement、visitor 请求
+│   ├── src/stores/             # authStore、userStore、repairStore、paymentStore、visitorStore
 │   ├── src/types/              # 共享实体和 permission 类型
-│   ├── src/components/common/  # StatCard、RepairStatusBadge、RepairCard 等
+│   ├── src/components/common/  # StatCard、RepairStatusBadge、RepairCard、VisitorPassCard 等
 │   ├── src/hooks/              # useAuth、useRepairStats、usePermission
-│   ├── src/pages/              # Dashboard、Repairs、Payments、Announcements、Profile
+│   ├── src/pages/              # Dashboard、Repairs、Payments、Announcements、Visitors、Profile
 │   ├── src/router/             # 路由及 guards
 │   ├── src/utils/              # request、roleText、feeCalculator
-│   └── src/constants/          # repair、user、errorCodes
+│   └── src/constants/          # repair、user、visitor、errorCodes
 ├── backend/
 │   ├── cmd/server/main.go
 │   ├── internal/{config,model,repository,service,handler,router,middleware,dto,constants,util}
@@ -126,6 +131,15 @@ OpenAPI 摘要位于 `backend/api/openapi.yaml`。
 - 后端使用：`backend/internal/service/permission_service.go`、`backend/internal/middleware/auth.go`、`middleware/rbac.go`、路由权限与 `backend/internal/util/formatter.go`。
 - 前端定义：`frontend/src/constants/user.ts`、`frontend/src/types/index.ts`。
 - 前端使用：`frontend/src/stores/authStore.ts`、`frontend/src/hooks/useAuth.ts`、`usePermission.ts`、`frontend/src/router/index.ts` 的 meta、`router/guards.ts`、`components/common/PermissionButton.ts`、`utils/roleText.ts` 与 `App.vue`。
+
+### VisitorPassStatus / 有效态
+
+访客通行证状态：`pending`（待审）、`approved`（已批准）、`rejected`（已拒绝）、`revoked`（已撤销）；已批准通行证还会按当前时间派生非持久化有效态 `upcoming`（未生效）/`active`（通行中）/`expired`（已过期）。
+
+- 后端定义：`backend/internal/constants/visitor.go`；数据库 `visitor_passes.status`；模型 `backend/internal/model/visitor_pass.go`（`effective_state` 为 `gorm:"-"` 计算字段）。
+- 后端使用：`backend/internal/service/visitor_pass_service.go`（创建、批准冲突检查、撤销窗口、状态装饰）、`backend/internal/repository/visitor_pass_repository.go`（重叠查询与条件更新）、`backend/internal/handler/visitor_pass_handler.go`、`backend/internal/util/formatter.go`、`constants/messages.go`、`constants/log_templates.go`、`constants/permissions.go`（`visitor:approve`）、`router/visitors.go`。
+- 前端定义：`frontend/src/constants/visitor.ts`、`frontend/src/types/index.ts`。
+- 前端使用：`frontend/src/components/common/VisitorPassCard.vue`、`frontend/src/pages/Visitors.vue`、`frontend/src/api/visitor.ts`、`frontend/src/stores/visitorStore.ts`、`hooks/usePermission.ts`、`types/permission.ts`、`constants/errorCodes.ts`（40901）。
 
 ## 环境变量
 

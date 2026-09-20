@@ -1,8 +1,18 @@
 openapi: 3.0.3
-info: { title: SmartEstate API, version: 1.0.0 }
+info: { title: SmartEstate API, version: 1.1.0 }
 paths:
   /healthz: { get: { summary: Health check } }
   /api/v1/auth/login: { post: { summary: Login } }
   /api/v1/repairs: { get: { summary: List repairs }, post: { summary: Create repair } }
   /api/v1/payments: { get: { summary: List payments }, post: { summary: Create bill } }
   /api/v1/announcements: { get: { summary: List announcements }, post: { summary: Publish announcement } }
+  /api/v1/visitor-passes:
+    get: { summary: List visitor passes (residents see own; staff/admin see all; ?status= filter) }
+    post: { summary: Register plate/building/room/visit window -> pending application }
+  /api/v1/visitor-passes/{id}/approve:
+    post: { summary: Staff approve; overlap of approved effective pass rejects whole attempt and keeps pending; duplicate/concurrent approve succeeds once (permission visitor:approve) }
+  /api/v1/visitor-passes/{id}/reject:
+    post: { summary: Staff reject a pending application with reason (permission visitor:approve) }
+  /api/v1/visitor-passes/{id}/revoke:
+    post: { summary: Revoke before visit start; owner or staff; releases the time slot }
+  /api/v1/dashboard/summary: { get: { summary: Workbench summary incl. pending visitor applications } }

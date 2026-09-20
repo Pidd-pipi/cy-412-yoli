@@ -16,3 +16,24 @@ func RoleText(v string) string {
 	m := map[string]string{constants.UserRoleResident: "业主", constants.UserRoleStaff: "物业人员", constants.UserRoleAdmin: "管理员"}
 	return m[v]
 }
+
+// VisitorStatusText 访客申请状态文本（页面状态徽标与日志共用）。
+func VisitorStatusText(v string) string {
+	m := map[string]string{
+		constants.VisitorStatusPending:  "待审",
+		constants.VisitorStatusApproved: "已批准",
+		constants.VisitorStatusRejected: "已拒绝",
+		constants.VisitorStatusRevoked:  "已撤销",
+	}
+	return m[v]
+}
+
+// VisitorEffectiveStateText 有效通行证的时段态文本。
+func VisitorEffectiveStateText(v string) string {
+	m := map[string]string{
+		constants.VisitorStateUpcoming: "未生效",
+		constants.VisitorStateActive:   "通行中",
+		constants.VisitorStateExpired:  "已过期",
+	}
+	return m[v]
+}

@@ -15,6 +15,7 @@ type Services struct {
 	Repairs       *service.RepairService
 	Payments      *service.PaymentService
 	Announcements *service.AnnouncementService
+	VisitorPasses *service.VisitorPassService
 	Permissions   *service.PermissionService
 	Logs          *service.OperationLogService
 }
@@ -34,7 +35,8 @@ func New(cfg config.Config, sv Services, logger any) *gin.Engine {
 	RegisterRepairs(protected, sv, h)
 	RegisterPayments(protected, sv, h)
 	RegisterAnnouncements(protected, sv, h)
-	d := handler.NewDashboardHandler(sv.Repairs, sv.Payments, sv.Announcements)
+	RegisterVisitorPasses(protected, sv, h)
+	d := handler.NewDashboardHandler(sv.Repairs, sv.Payments, sv.Announcements, sv.VisitorPasses)
 	protected.GET("/dashboard/summary", d.Summary)
 	logs := handler.NewOperationLogHandler(sv.Logs)
 	protected.GET("/operation-logs", middleware.RequirePermission(sv.Permissions, "log:read"), logs.List)

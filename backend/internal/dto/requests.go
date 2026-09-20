@@ -36,3 +36,14 @@ type CreateAnnouncementRequest struct {
 	Category string `json:"category" validate:"required,oneof=通知 活动 紧急"`
 	Top      bool   `json:"top"`
 }
+type CreateVisitorPassRequest struct {
+	Plate       string `json:"plate" validate:"required,min=5,max=16"`
+	VisitorName string `json:"visitor_name" validate:"omitempty,max=30"`
+	Building    string `json:"building" validate:"required,max=30"`
+	Room        string `json:"room" validate:"required,max=30"`
+	StartAt     string `json:"start_at" validate:"required"`
+	EndAt       string `json:"end_at" validate:"required"`
+}
+type RejectVisitorPassRequest struct {
+	Reason string `json:"reason" validate:"required,min=2,max=200"`
+}
