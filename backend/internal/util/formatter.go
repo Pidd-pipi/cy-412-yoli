@@ -16,3 +16,7 @@ func RoleText(v string) string {
 	m := map[string]string{constants.UserRoleResident: "业主", constants.UserRoleStaff: "物业人员", constants.UserRoleAdmin: "管理员"}
 	return m[v]
 }
+func VisitorStatusText(v string) string {
+	m := map[string]string{constants.VisitorPassStatusPending: "待审核", constants.VisitorPassStatusApproved: "已批准", constants.VisitorPassStatusRevoked: "已撤销", constants.VisitorPassStatusExpired: "已过期"}
+	return m[v]
+}

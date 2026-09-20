@@ -6,3 +6,6 @@ paths:
   /api/v1/repairs: { get: { summary: List repairs }, post: { summary: Create repair } }
   /api/v1/payments: { get: { summary: List payments }, post: { summary: Create bill } }
   /api/v1/announcements: { get: { summary: List announcements }, post: { summary: Publish announcement } }
+  /api/v1/visitor-passes: { get: { summary: List visitor pass applications }, post: { summary: Register visitor pass application } }
+  /api/v1/visitor-passes/{id}/approve: { post: { summary: Approve application (visitor:manage); 409 on time conflict or repeated approval } }
+  /api/v1/visitor-passes/{id}/revoke: { post: { summary: Revoke pass before visit starts } }

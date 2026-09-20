@@ -22,6 +22,7 @@ docker compose up -d
 - **报修管理**：业主创建水电/家具/公共设施等报修；物业筛选、分配和更新进度。
 - **费用缴纳**：按业主展示账单，通过支付宝沙箱模拟完成支付和记录查询。
 - **社区公告**：置顶、发布、详情查看与阅读计数。
+- **访客通行**：登记车牌、到访时段和楼栋房号生成待审申请；物业批准时同一车牌重叠时段仅允许一张有效通行证，冲突整次拒绝并保持待审；到访开始前可撤销，撤销或过期后释放时段；重复与并发审批只成功一次。
 - **个人中心**：更新昵称、头像 URL，并绑定楼栋、单元和房间。
 - **安全与治理**：JWT 登录态、RBAC、操作日志、敏感接口内存限流、统一 JSON 响应。
 
@@ -75,6 +76,9 @@ cd backend && go build ./...
 | POST | `/payments/:id/pay` | 模拟支付（限流） |
 | GET/POST | `/announcements` | 公告列表 / 发布，发布需 `announcement:publish` |
 | GET | `/announcements/:id` | 公告详情并记录阅读 |
+| GET/POST | `/visitor-passes` | 访客通行申请列表 / 登记申请 |
+| POST | `/visitor-passes/:id/approve` | 批准申请，`visitor:manage`；时段冲突或重复审批返回 409 |
+| POST | `/visitor-passes/:id/revoke` | 到访开始前撤销通行证，释放时段 |
 | GET | `/dashboard/summary` | 工作台汇总 |
 | GET | `/operation-logs` | 操作日志，`log:read` |
 
@@ -126,6 +130,13 @@ OpenAPI 摘要位于 `backend/api/openapi.yaml`。
 - 后端使用：`backend/internal/service/permission_service.go`、`backend/internal/middleware/auth.go`、`middleware/rbac.go`、路由权限与 `backend/internal/util/formatter.go`。
 - 前端定义：`frontend/src/constants/user.ts`、`frontend/src/types/index.ts`。
 - 前端使用：`frontend/src/stores/authStore.ts`、`frontend/src/hooks/useAuth.ts`、`usePermission.ts`、`frontend/src/router/index.ts` 的 meta、`router/guards.ts`、`components/common/PermissionButton.ts`、`utils/roleText.ts` 与 `App.vue`。
+
+### VisitorPassStatus
+
+- 后端定义：`backend/internal/constants/visitor_pass.go`；数据库 `VisitorPass.status`；模型 `backend/internal/model/visitor_pass.go`。
+- 后端使用：`backend/internal/service/visitor_pass_service.go` 审批状态机与冲突检测、`backend/internal/repository/visitor_pass_repository.go` 条件更新、`backend/internal/handler/visitor_pass_handler.go`、`backend/internal/util/formatter.go` 与 `backend/internal/constants/log_templates.go`。
+- 前端定义：`frontend/src/constants/visitorPass.ts`、`frontend/src/types/index.ts`。
+- 前端使用：`frontend/src/components/common/VisitorPassStatusBadge.vue`、`VisitorPassCard.vue`、`frontend/src/pages/VisitorPasses.vue` 的筛选器与 `frontend/src/api/visitorPass.ts`。
 
 ## 环境变量
 

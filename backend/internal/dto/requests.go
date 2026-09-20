@@ -1,5 +1,7 @@
 package dto
 
+import "time"
+
 type LoginRequest struct {
 	Phone    string `json:"phone" validate:"required"`
 	Password string `json:"password" validate:"required,min=6"`
@@ -29,6 +31,14 @@ type CreatePaymentRequest struct {
 	FeeType string  `json:"fee_type" validate:"required"`
 	Amount  float64 `json:"amount" validate:"required,gt=0"`
 	Month   string  `json:"month" validate:"required,len=7"`
+}
+type CreateVisitorPassRequest struct {
+	PlateNo    string    `json:"plate_no" validate:"required,min=5,max=20"`
+	Building   string    `json:"building" validate:"required"`
+	Unit       string    `json:"unit"`
+	Room       string    `json:"room" validate:"required"`
+	VisitStart time.Time `json:"visit_start" validate:"required"`
+	VisitEnd   time.Time `json:"visit_end" validate:"required,gtfield=VisitStart"`
 }
 type CreateAnnouncementRequest struct {
 	Title    string `json:"title" validate:"required,min=2"`

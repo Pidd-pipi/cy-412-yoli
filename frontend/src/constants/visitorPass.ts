@@ -1,0 +1,1 @@
+import type {VisitorPassStatus} from '../types'; export const VISITOR_PASS_STATUS:Record<Uppercase<VisitorPassStatus>,VisitorPassStatus>={PENDING:'pending',APPROVED:'approved',REVOKED:'revoked',EXPIRED:'expired'}; export const visitorPassStatusText:Record<VisitorPassStatus,string>={pending:'待审核',approved:'已批准',revoked:'已撤销',expired:'已过期'};
